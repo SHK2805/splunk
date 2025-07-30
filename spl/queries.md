@@ -1,6 +1,6 @@
 ## Simple queries
 
-- ### search
+### search
 - It searches the **`botsv3` index** for events that contain **any of the following keywords**:
     - `"error"`
     - `"failed"`
