@@ -104,23 +104,41 @@ index=botsv3
 | eval byte_category=if(bytes > 1000000, "HIGH", "LOW")
 | head 10000
 ```
+- concatinate fields
+```spl
+index=botsv3 
+| eval connection=src_ip . ":" . src_port . "->" . dest_ip . ":" . dest_port
+| table src_ip, dest_ip, connection
+```
+- Extract domain from email addresses
+```spl
+index=botsv3
+| head 10000
+| eval ename=mvindex(split(email, "@"), 0)
+| eval edomain=mvindex(split(email, "@"), 1)
+| table email, ename, edomain
+```
+- Get the day of the week
+```spl
+index=botsv3
+| head 1000
+| eval day_of_the_week=strftime(_time,"%A")
+| table _time, day_of_the_week
+```
+- Look for Googlebot in useragent
+- eval creates a new field called suspicious_user_agent.
+- case() is a conditional function—it evaluates expressions in order and returns the first one that’s true.
+- lower_case_useragent like "%googlebot%" checks if the lower_case_useragent field contains the string “googlebot” (case-insensitive match, thanks to the lowercase input).
+- If true → assigns "Yes" to suspicious_user_agent.
+- 1=1 is a catch-all condition that's always true, meaning if the first condition fails, this one will succeed.
+- So if "googlebot" isn’t found → assigns "No".
+```spl
+index=botsv3 sourcetype=access_combined 
+| eval lower_case_useragent=lower(useragent)
+| eval suspicious_user_agent=case(lower_case_useragent like "%googlebot%", "Yes", 1=1, "No")
+| table useragent, suspicious_user_agent
+```
 - 
-```spl
-
-```
--
-```spl
-
-```
--
-```spl
-
-```
--
-```spl
-
-```
--
 ```spl
 
 ```
