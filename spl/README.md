@@ -94,3 +94,14 @@ This compares two fields—something `search` can’t do.
 ##### When to Use What
 - Use `search` for **quick filtering** or **indexed field matches**.
 - Use `where` for **complex logic**, **numeric comparisons**, or **field relationships**.
+
+
+### eval
+- **eval** Command in Splunk lets you create new fields, transform existing ones, and perform calculations or logic using expressions.
+- It calculates values using mathematical, string, or boolean expressions.
+- It Creates new fields or overwrites existing ones.
+- it Supports functions like if(), len(), match(), round(), and even cryptographic ones like md5().
+- In fraud detection, eval is your go-to for:
+    - Scoring risk based on multiple signals.
+    - Flagging anomalies like mismatched device profiles.
+    - Creating derived fields for dashboards (e.g., eval fraud_ratio=fraud_count/total_count).

@@ -62,6 +62,64 @@ index=botsv3 app=amazon_aws
 ```spl
 
 ```
+- search soutcetype tcp stream
+```spl
+index=botsv3 | search sourcetype="stream:ip" | head 10
+```
+- Findout where bytes out is greater than bytes in
+```spl
+index=botsv3 | where bytes_in < bytes_out | head 10
+```
+- search user not admin
+```spl
+index=botsv3 | search action="failure" user!="admin"
+```
+- Detect excessive data transfer
+```spl
+index=botsv3 | where bytes_in > 1000000 AND bytes_out < 500
+```
+- Filter by time
+```spl
+index=botsv3 | where strftime(_time, "%H") > 22
+```
+- Eval Flag potential data exfiltration
+```spl
+index=botsv3 | eval exfil_flag=if(bytes_out > 5000000, "Yes", "No")
+```
+- Eval Create a risk score based on multiple fields
+```spl
+index=botsv3 | eval risk_score=(bytes_out/bytes_in)*100
+```
+- Eval Concatenate source and destination
+```spl
+index=botsv3 | eval flow=src_ip . " → " . dest_ip
+```
+- Eval Categorize login type
+```spl
+index=botsv3 | eval login_type=if(user=="admin", "Privileged", "Standard")
+```
+- High data transfer
+```spl
+index=botsv3 
+| eval byte_category=if(bytes > 1000000, "HIGH", "LOW")
+| head 10000
+```
+- 
+```spl
+
+```
+-
+```spl
+
+```
+-
+```spl
+
+```
+-
+```spl
+
+```
 -
 ```spl
 
@@ -78,3 +136,16 @@ index=botsv3 app=amazon_aws
 ```spl
 
 ```
+-
+```spl
+
+```
+-
+```spl
+
+```
+-
+```spl
+
+```
+
