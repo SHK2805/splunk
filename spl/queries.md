@@ -1,6 +1,12 @@
 ## Simple queries
 
 ### search
+- List all the indexes
+```spl
+| eventcount summarize=false index=*
+| stats count by index
+| fields index ```Provide a list of all indexes```
+```
 - It searches the **`botsv3` index** for events that contain any of the following **keywords / words**:
     - `"error"`
     - `"failed"`
@@ -138,21 +144,63 @@ index=botsv3 sourcetype=access_combined
 | eval suspicious_user_agent=case(lower_case_useragent like "%googlebot%", "Yes", 1=1, "No")
 | table useragent, suspicious_user_agent
 ```
-- 
+- Get the geo location using inbuilt iplocation
 ```spl
-
+index=botsv3
+| iplocation prefix=dest_loc_ allfields=true dest_ip
+| iplocation prefix=src_loc_ allfields=true src_ip
+| table src_*, dest_*
 ```
--
-```spl
+- Get the geolocation in the map
+- Tailored for geo-visualizing source IP traffic:
+- This search is designed to **map the count of events** grouped by the **country of origin for each source IP address** using a geographical visualization.
+- **`index=botsv3`**
+   - Searches events in the `botsv3` index, commonly used for Splunk’s Boss of the SOC (BOTS) datasets.
+   - This index likely contains simulated security event data with IP addresses and other network metadata.
+- **`| iplocation prefix=src_loc_ allfields=true src_ip`**
+   - Enriches each event with geo-location data (like Country, City, Region) using the `src_ip` field.
+   - The results are stored in new fields prefixed with `src_loc_` (e.g., `src_loc_Country`, `src_loc_City`).
+   - `allfields=true` ensures **all available geolocation attributes** are added.
+- **`| stats count BY src_loc_Country`**
+   - Aggregates the number of events **per country** based on the IP location.
+   - You’ll get a table like:
 
+     | src_loc_Country | count |
+     |------------------|--------|
+     | United States     | 532    |
+     | Germany            | 174    |
+- **`| geom geo_countries allFeatures=True featureIdField=src_loc_Country`**
+   - Prepares the data for geographical plotting on a world map.
+   - `geo_countries` is a built-in Splunk lookup used for map rendering.
+   - `featureIdField=src_loc_Country` matches your country field to the map's country feature names.
+   - `allFeatures=True` includes countries with zero count—ensures consistent map display.
+- This SPL is great for visualizing **attack origins**, identifying patterns in traffic sources, and highlighting geographic concentrations of suspicious activity. Especially in fraud detection, it gives a quick snapshot of country-level traffic distribution.
+```spl
+index=botsv3
+| iplocation prefix=src_loc_ allfields=true src_ip 
+| stats count BY src_loc_Country | geom geo_countries allFeatures=True featureIdField=src_loc_Country
 ```
--
 ```spl
-
+index=botsv3
+| iplocation prefix=dest_loc_ allfields=true dest_ip 
+| stats count BY dest_loc_Country | geom geo_countries allFeatures=True featureIdField=dest_loc_Country
 ```
--
+- Get servers that newly added
 ```spl
-
+index=botsv3 
+| stats min(_time) as first_time by host
+| eval now_time = now()
+| eval diff_time = now_time - first_time
+| where diff_time < 2400
+```
+- Get servers that are not transmitting to Splunk in the past 3600 seconds
+```spl
+index=botsv3
+| tstats latest(_time) as latestEventTime WHERE index=* BY host
+| eval timeSinceLastEvent = now() - latestEventTime
+| where timeSinceLastEvent > 3600  // Adjust this threshold (in seconds) as needed
+| convert ctime(latestEventTime) AS "Last Event Time"
+| table host, "Last Event Time", timeSinceLastEvent
 ```
 -
 ```spl
